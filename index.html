@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supermarket Billing System</title>
+  <!-- Include Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* General body styling */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #4CAF50;
+      font-size: 2.5rem;
+    }
+
+    h2 {
+      color: #333;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+
+    /* Table styles */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    td {
+      background-color: #ffffff;
+    }
+
+    /* Button styles */
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      padding: 12px 20px;
+      font-size: 1rem;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #checkout-btn {
+      background-color: #2196F3;
+    }
+
+    #checkout-btn:hover {
+      background-color: #1e88e5;
+    }
+
+    #print-invoice-btn, #show-saved-invoice-btn {
+      background-color: #ff9800;
+    }
+
+    #print-invoice-btn:hover, #show-saved-invoice-btn:hover {
+      background-color: #fb8c00;
+    }
+
+    /* Delete button styling */
+    .delete-btn {
+      color: red;
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+
+    .delete-btn:hover {
+      color: #d32f2f;
+    }
+
+    /* Input styles */
+    input[type="text"], input[type="number"] {
+      padding: 10px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 200px;
+    }
+
+    /* Custom section for saved invoices */
+    #saved-invoices-section {
+      margin-top: 40px;
+      background-color: #ffffff;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .invoice-btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 5px 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .invoice-btn:hover {
+      background-color: #45a049;
+    }
+
+    /* Modal Styling for saved invoice details */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      padding-top: 100px;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgb(0, 0, 0);
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      border-radius: 8px;
+    }
+
+    .modal-header {
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    .modal-body {
+      margin-top: 20px;
+    }
+
+    .modal-footer {
+      text-align: right;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* Hidden Add New Product Section */
+    #add-product-section {
+      display: none;
+    }
+
+    /* Toggle Button */
+    .toggle-btn {
+      cursor: pointer;
+      font-size: 1.5rem;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border-radius: 5px;
+    }
+
+    .toggle-btn:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Supermarket Billing System</h1>
+
+  <!-- Toggle Button to show/hide Add New Product -->
+  <button class="toggle-btn" id="toggle-product-section">
+    <i class="fas fa-plus"></i> Add New Product
+  </button>
+
+  <!-- Add new product section -->
+  <div id="add-product-section">
+    <h2>Add New Product</h2>
+    <label for="new-product-name">Product Name:</label>
+    <input type="text" id="new-product-name" placeholder="Enter product name">
+    <label for="new-product-barcode">Product Barcode:</label>
+    <input type="text" id="new-product-barcode" placeholder="Enter product barcode">
+    <label for="new-product-price">Product Price ($):</label>
+    <input type="number" id="new-product-price" placeholder="Enter product price">
+    <button id="add-product-btn">Add Product</button>
+  </div>
+
+  <!-- Barcode scanning area -->
+  <label for="barcode-input">Scan Barcode:</label>
+  <input type="text" id="barcode-input" placeholder="Scan barcode or enter code">
+  <button id="scan-btn">Scan</button>
+
+  <div>
+    <h2>Cart</h2>
+    <table id="cart-table">
+      <thead>
+        <tr>
+          <th>Serial No</th>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Price</th>
+          <th>Total</th>
+          <th>Actions</th> <!-- Column for delete buttons -->
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p>Total: $<span id="total-price">0.00</span></p>
+  </div>
+
+  <button id="checkout-btn">Checkout</button>
+
+  <h2>Reports</h2>
+  <button id="generate-report-btn">Generate Report</button>
+
+  <!-- Print Invoice Button with Font Awesome Icon -->
+  <button id="print-invoice-btn">
+    <i class="fas fa-print"></i> Print Invoice
+  </button>
+
+  <!-- Show Saved Invoice Button with Font Awesome Icon -->
+  <button id="show-saved-invoice-btn">
+    <i class="fas fa-folder-open"></i> Show Saved Invoice
+  </button>
+
+  <!-- Saved Invoices Section -->
+  <div id="saved-invoices-section">
+    <h2>Saved Invoices</h2>
+    <table id="saved-invoices-table">
+      <thead>
+        <tr>
+          <th>Invoice ID</th>
+          <th>Date</th>
+          <th>Total Amount</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="saved-invoices-body">
+        <!-- Saved invoices will appear here -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal for Saved Invoice Details -->
+  <div id="invoice-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="close">&times;</span>
+        <h2>Invoice Details</h2>
+      </div>
+      <div class="modal-body" id="invoice-modal-body">
+        <!-- Invoice details will be displayed here -->
+      </div>
+      <div class="modal-footer">
+        <button class="invoice-btn" id="print-invoice-modal-btn">Print</button>
+        <button class="invoice-btn" id="close-modal-btn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+
+  <script>
+    const productsDatabase = JSON.parse(localStorage.getItem('productsDatabase')) || {
+      "123456789": { name: "Apple", price: 2.5 },
+      "987654321": { name: "Banana", price: 1.2 },
+      "112233445": { name: "Orange", price: 3.0 },
+    };
+
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    function addToCart(barcode) {
+      const product = productsDatabase[barcode];
+      if (product) {
+        const existingProduct = cart.find(item => item.product === product.name);
+        if (existingProduct) {
+          existingProduct.quantity++;
+          existingProduct.totalPrice = existingProduct.quantity * existingProduct.price;
+        } else {
+          cart.push({
+            product: product.name,
+            quantity: 1,
+            price: product.price,
+            totalPrice: product.price,
+          });
+        }
+        updateCartDisplay();
+        localStorage.setItem('cart', JSON.stringify(cart));
+      } else {
+        alert("Product not found!");
+      }
+    }
+
+    function updateCartDisplay() {
+      const cartTableBody = document.querySelector("#cart-table tbody");
+      cartTableBody.innerHTML = '';
+      let totalPrice = 0;
+      cart.forEach((item, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${item.product}</td>
+          <td>${item.quantity}</td>
+          <td>$${item.price.toFixed(2)}</td>
+          <td>$${item.totalPrice.toFixed(2)}</td>
+          <td><span class="delete-btn" onclick="deleteItem(${index})"><i class="fas fa-trash-alt"></i></span></td>
+        `;
+        cartTableBody.appendChild(row);
+        totalPrice += item.totalPrice;
+      });
+      document.getElementById("total-price").textContent = totalPrice.toFixed(2);
+    }
+
+    function deleteItem(index) {
+      cart.splice(index, 1);
+      updateCartDisplay();
+      localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    document.getElementById("scan-btn").addEventListener("click", () => {
+      const barcodeInput = document.getElementById("barcode-input").value.trim();
+      if (barcodeInput === "") {
+        alert("Please scan or enter a barcode.");
+      } else {
+        addToCart(barcodeInput);
+        document.getElementById("barcode-input").value = '';
+      }
+    });
+
+    document.getElementById("add-product-btn").addEventListener("click", () => {
+      const name = document.getElementById("new-product-name").value.trim();
+      const barcode = document.getElementById("new-product-barcode").value.trim();
+      const price = parseFloat(document.getElementById("new-product-price").value.trim());
+      if (name === "" || barcode === "" || isNaN(price)) {
+        alert("Please enter valid product details.");
+        return;
+      }
+      productsDatabase[barcode] = { name, price };
+      localStorage.setItem('productsDatabase', JSON.stringify(productsDatabase));
+      alert(`Product "${name}" added successfully!`);
+      document.getElementById("new-product-name").value = '';
+      document.getElementById("new-product-barcode").value = '';
+      document.getElementById("new-product-price").value = '';
+    });
+
+    document.getElementById("checkout-btn").addEventListener("click", () => {
+      if (cart.length === 0) {
+        alert("Cart is empty. Please add products before checking out.");
+        return;
+      }
+
+      saveInvoice(); // Save the invoice when checkout happens
+      alert(`Checkout successful! Total: $${document.getElementById("total-price").textContent}`);
+      cart = [];
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartDisplay();
+    });
+
+    function saveInvoice() {
+      const invoiceData = {
+        cart: cart,
+        totalPrice: document.getElementById("total-price").textContent,
+        date: new Date().toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })
+      };
+
+      let savedInvoices = JSON.parse(localStorage.getItem('savedInvoices')) || [];
+      savedInvoices.push(invoiceData);
+      localStorage.setItem('savedInvoices', JSON.stringify(savedInvoices));
+    }
+
+    document.getElementById("show-saved-invoice-btn").addEventListener("click", () => {
+      const savedInvoices = JSON.parse(localStorage.getItem('savedInvoices')) || [];
+      const savedInvoicesBody = document.getElementById("saved-invoices-body");
+
+      savedInvoicesBody.innerHTML = "";
+      savedInvoices.forEach((invoice, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${invoice.date}</td>
+          <td>$${invoice.totalPrice}</td>
+          <td>
+            <button class="invoice-btn" onclick="viewInvoice(${index})">
+              <i class="fas fa-eye"></i> View
+            </button>
+            <span class="delete-btn" onclick="deleteSavedInvoice(${index})">
+              <i class="fas fa-trash-alt"></i>
+            </span>
+          </td>
+        `;
+        savedInvoicesBody.appendChild(row);
+      });
+    });
+
+    function deleteSavedInvoice(index) {
+      let savedInvoices = JSON.parse(localStorage.getItem('savedInvoices')) || [];
+      savedInvoices.splice(index, 1);
+      localStorage.setItem('savedInvoices', JSON.stringify(savedInvoices));
+      alert("Invoice deleted!");
+      document.getElementById("show-saved-invoice-btn").click();
+    }
+
+    function viewInvoice(index) {
+      const savedInvoices = JSON.parse(localStorage.getItem('savedInvoices')) || [];
+      const invoice = savedInvoices[index];
+
+      const modalBody = document.getElementById("invoice-modal-body");
+      modalBody.innerHTML = `
+        <h3>Invoice Details</h3>
+        <p><strong>Date:</strong> ${invoice.date}</p>
+        <p><strong>Total Amount:</strong> $${invoice.totalPrice}</p>
+        <h4>Items:</h4>
+        <ul>
+          ${invoice.cart.map(item => `<li>${item.product} (x${item.quantity}) - $${item.totalPrice.toFixed(2)}</li>`).join('')}
+        </ul>
+      `;
+
+      const modal = document.getElementById("invoice-modal");
+      modal.style.display = "block";
+
+      document.getElementById("close-modal-btn").onclick = function() {
+        modal.style.display = "none";
+      };
+
+      document.getElementById("print-invoice-modal-btn").onclick = function() {
+        window.print(); // Print the invoice
+      };
+    }
+
+    // Toggle Add Product section visibility
+    document.getElementById("toggle-product-section").addEventListener("click", function() {
+      const productSection = document.getElementById("add-product-section");
+      if (productSection.style.display === "none" || productSection.style.display === "") {
+        productSection.style.display = "block";
+        this.innerHTML = '<i class="fas fa-minus"></i> Hide Add Product';
+      } else {
+        productSection.style.display = "none";
+        this.innerHTML = '<i class="fas fa-plus"></i> Add New Product';
+      }
+    });
+  </script>
+</body>
+</html>
